@@ -248,28 +248,49 @@ public class DicService {
 
   public void createDic() throws Exception {
     DicService dicService = new DicService();
+    Properties words = new Properties();
     FileInputStream fis = new FileInputStream(dicService.setup.getProperty(WORDS_PATH_PROP));
-    byte[] bs = new byte[1024];
-    int readBytes;
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    while ((readBytes = fis.read(bs)) != -1) {
-      bos.write(Arrays.copyOfRange(bs, 0, readBytes));
-    }
-    String s = new String(bos.toByteArray()).toLowerCase();
-    String ss[] = s.toLowerCase().split("\n");
-    Set<String> dics = new HashSet<String>();
-    dics.addAll(Arrays.asList(ss));
+    words.load(fis);
     String newDics = "";
-    for (String key : dics) {
+    for (Object obj : words.keySet()) {
+      String key = obj.toString();
       if (!newDics.isEmpty())
         newDics = "\n" + newDics;
       newDics = key.toString().trim().toLowerCase() + "=" + getRusWord(key.trim().toLowerCase()) + newDics;
+      if (!translate.containsKey(key)) {
+        String rus = translate.getProperty(key);
+        if (rus == null) {
+          rus = words.getProperty(key.toString());
+        }
+        translate.put(key, (rus == null) ? "" : rus);
+      }
     }
     File f = new File(dicService.setup.getProperty(NEW_PLAY_WORDS_PATH_PROP));
     if (!f.exists())
       f.createNewFile();
     FileOutputStream fos = new FileOutputStream(f);
     fos.write(newDics.getBytes());
+    fos.close();
+    String rows = "";
+    List l = new ArrayList();
+    l.addAll(translate.keySet());
+    Collections.sort(l, new Comparator() {
+      @Override
+      public int compare(Object o1, Object o2) {
+        return o2.toString().compareToIgnoreCase(o1.toString());
+      }
+    });
+    for (Object key : l) {
+      if (!rows.isEmpty())
+        rows = "\n" + rows;
+      String rus = getRusWord(key.toString());
+      rows = key.toString().trim().toLowerCase() + "=" + rus + rows;
+    }
+    f = new File(dicService.setup.getProperty(DICTIONARY_PATH_PROP));
+    if (!f.exists())
+      f.createNewFile();
+    fos = new FileOutputStream(f);
+    fos.write(rows.getBytes());
     fos.close();
   }
 }
