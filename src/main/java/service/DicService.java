@@ -22,11 +22,11 @@ public class DicService {
   //dictionary=/home/user/english/setup/dictionary.dic
   static private String DICTIONARY_PATH_PROP = "dictionary";
   //currentDictionary=/home/user/english/setup/current.dic
-  static private String PLAY_WORDS_PATH_PROP = "playWordsPath";
-  //wordsPath=/home/user/english/setup/words.words
-  static private String WORDS_PATH_PROP = "wordsPath";
+  static private String PLAY_WORDS_PATH_PROP = "playDicFile";
+  //newWordsFile=/home/user/english/setup/words.words
+  static private String WORDS_PATH_PROP = "newWordsFile";
   //newDictionary=/home/user/english/setup/newDic.dic
-  static private String NEW_PLAY_WORDS_PATH_PROP = "newPlayWordsPath";
+  static private String NEW_PLAY_WORDS_PATH_PROP = "newPlayDicFile";
 
   public DicService() throws Exception {
     prepareSetup();
