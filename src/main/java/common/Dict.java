@@ -1,28 +1,27 @@
 package common;
 
-import service.ActionListener;
-import service.DicService;
-import service.GraberAudio;
-import service.PlayingBackAudio;
+import service.*;
+import view.ViewSettingForm;
 import view.ViewWordForm;
 
 import javax.swing.*;
-import java.io.*;
-import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  */
 public class Dict {
   static ViewWordForm viewWord;
+  static ViewSettingForm viewSetting;
   static JFrame frame;
+  static JFrame frameSettings;
   static DicService dicService;
+  static PlayService playService;
 
   static public void main(String ... args) throws Exception {
     dicService = new DicService();
+    playService = new PlayService();
     viewWord = new ViewWordForm();
+    viewSetting = new ViewSettingForm();
     JFrame.setDefaultLookAndFeelDecorated(true);
     frame = new JFrame("Dictionary");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -30,12 +29,19 @@ public class Dict {
     frame.setSize(700, 200);
     frame.setVisible(true);
     frame.setAlwaysOnTop(true);
+    frameSettings = new JFrame("Settings");
+    frameSettings.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frameSettings.getContentPane().add(viewSetting.getViewPanel());
+    frameSettings.setSize(viewSetting.getViewPanel().getPreferredSize().width + 10,
+        viewSetting.getViewPanel().getPreferredSize().height + 10);
+    frameSettings.setVisible(true);
+    frameSettings.setAlwaysOnTop(true);
+
     final ActionListener actionListener = new ActionListener<AbstractMap.SimpleEntry>() {
       @Override
       public void execute(AbstractMap.SimpleEntry value) {
         if ("eng".equals(value.getKey().toString())) {
           viewWord.setEnglishWord(value.getValue().toString());
-          viewWord.setSelEngWord(value.getValue().toString());
         }
         if ("rus".equals(value.getKey().toString())) {
           viewWord.setRussianWord(value.getValue().toString());
@@ -44,98 +50,107 @@ public class Dict {
           frame.setTitle(value.getValue().toString());
         }
         if ("err".equals(value.getKey().toString())) {
-          viewWord.setStatusEngWord(value.getValue().toString());
+          viewSetting.setErrText(value.getValue().toString());
+        }
+        if ("err_rus".equals(value.getKey().toString())) {
+          viewSetting.setErrRusText(value.getValue().toString());
+        }
+        if ("err_snd".equals(value.getKey().toString())) {
+          viewSetting.setErrSndText(value.getValue().toString());
         }
       }
     };
-    viewWord.init();
-    viewWord.addDelayListener(
-        new ActionListener<Integer>() {
-          @Override
-          public void execute(Integer value) {
-            dicService.setDelay(value);
-          }
-        }
-    );
-    viewWord.addAutoListener(
+
+    viewSetting.addAutoListener(
         new ActionListener<Boolean>() {
           @Override
           public void execute(Boolean value) {
-            dicService.rePlay(value);
-            dicService.play(actionListener);
+            playService.setAuto(value);
           }
         }
     );
-    viewWord.addPlayListener(
+
+    viewSetting.addPlayListener(
         new ActionListener<Boolean>() {
           @Override
           public void execute(Boolean value) {
-            String eng = viewWord.getSelEngWord();
-            viewWord.setEnglishWord(eng.toLowerCase());
-            viewWord.setRussianWord(dicService.getRusWord(eng));
-            dicService.sound(eng);
+            viewWord.setEnglishWord("");
+            viewWord.setRussianWord("");
+            viewSetting.setErrSndText("");
+            if (value)
+              playService.play(actionListener);
+            else
+              playService.stop();
           }
         }
     );
-    viewWord.addPlayDirectListener(
-        new ActionListener<Boolean>() {
-          @Override
-          public void execute(Boolean value) {
-            dicService.direct(value);
-            dicService.play(actionListener);
-            viewWord.setAutoMode(true);
-          }
-        }
-    );
-    viewWord.addRefreshListener(
+
+    viewSetting.addPlayNextListener(
         new ActionListener<Void>() {
           @Override
           public void execute(Void value) {
-              dicService.refresh();
-              dicService.play(actionListener);
-              viewWord.setAutoMode(true);
+            playService.next();
           }
         }
     );
-    viewWord.addPauseListener(
-        new ActionListener<Void>() {
-          @Override
-          public void execute(Void value) {
-            dicService.pause();
-          }
-        }
-    );
-    viewWord.addPlayNextListener(
-        new ActionListener<Void>() {
-          @Override
-          public void execute(Void value) {
-            dicService.next();
-          }
-        }
-    );
-    viewWord.addGrabSoundListener(
-        new ActionListener<Void>() {
-          @Override
-          public void execute(Void value) {
-            String s = viewWord.getSndText();
-            String err = dicService.grabSound(s);
-            viewWord.setStatusEngWord(err);
-          }
-        }
-    );
-    viewWord.addCreateDicListener(
+
+    viewSetting.addRefreshListener(
         new ActionListener<Void>() {
           @Override
           public void execute(Void value) {
             try {
-              dicService.createDic();
-            } catch (Exception ex) {
-              viewWord.setStatusEngWord(ex.getMessage());
+              viewSetting.setErrSndText("");
+              SetupProps.refresh();
+              playService.refresh(actionListener);
+            } catch (Exception e) {
+              e.printStackTrace();
             }
           }
         }
     );
-    Thread.sleep(1000);
-    dicService.play(actionListener);
+
+    viewSetting.addPauseListener(
+        new ActionListener<Void>() {
+          @Override
+          public void execute(Void value) {
+            playService.pause();
+          }
+        }
+    );
+
+    viewSetting.addDelayListener(
+        new ActionListener<Integer>() {
+          @Override
+          public void execute(Integer value) {
+            playService.setDelay(value);
+          }
+        }
+    );
+
+    viewSetting.addGrabSoundListener(
+        new ActionListener<Void>() {
+          @Override
+          public void execute(Void value) {
+            String s = viewSetting.getGrabWords();
+            String err = dicService.grabSound(s);
+            viewSetting.setErrSndText(err);
+          }
+        }
+    );
+
+    viewSetting.addCreateDicListener(
+        new ActionListener<Void>() {
+          @Override
+          public void execute(Void value) {
+            try {
+              dicService.refreshDic();
+              SetupProps.refresh();
+              playService.refresh(actionListener);
+            } catch (Exception ex) {
+              viewSetting.setErrSndText(ex.getMessage());
+            }
+          }
+        }
+    );
   }
 }
