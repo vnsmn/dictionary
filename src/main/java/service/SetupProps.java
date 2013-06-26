@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  */
@@ -20,7 +21,9 @@ public class SetupProps {
   static private Map<String, File> sndFiles;
   static private Properties playWords;
   static private Properties dictionary;
-//  static private List<String> plays;
+  static private Map<String, String> plays;
+  static private String playWordsPath;
+  static private AtomicInteger delaySound = new AtomicInteger(0);
 
   static {
     try {
@@ -46,17 +49,24 @@ public class SetupProps {
     })) {
       sndFiles.put(f.getName().substring(0, f.getName().length() - 4), f);
     }
-//    plays = new ArrayList();
-//    Enumeration keys = setupProps.keys();
-//    while (keys.hasMoreElements()) {
-//      String key = keys.nextElement().toString();
-//      if (key.startsWith("playDicFile"))
-//        plays.add(setupProps.getProperty(key));
-//    }
+    plays = new TreeMap<String, String>();
+    Enumeration keys = setupProps.keys();
+    while (keys.hasMoreElements()) {
+      String key = keys.nextElement().toString();
+      if (key.startsWith("playDicFile")) {
+        File f = new File(setupProps.getProperty(key));
+        if (f.exists())
+          plays.put(f.getName(), f.getAbsolutePath());
+      }
+    }
   }
 
   public static String getPlayWordsPath() {
-    return setupProps.getProperty(PLAY_WORDS_PATH_PROP);
+    return playWordsPath == null || playWordsPath.isEmpty() ? setupProps.getProperty(PLAY_WORDS_PATH_PROP) : playWordsPath;
+  }
+
+  public static void setPlayWordsPath(String s) {
+    playWordsPath = s;
   }
 
   public static String getDicPath() {
@@ -79,9 +89,9 @@ public class SetupProps {
     return sndFiles;
   }
 
-//  static public List<String> getPlays() {
-//    return plays;
-//  }
+  static public Map<String, String> getPlays() {
+    return plays;
+  }
 
   static public String getRusWord(String eng) {
     String rus = dictionary.getProperty(eng);
@@ -92,8 +102,13 @@ public class SetupProps {
     return (rus == null) ? "" : new String(rus.getBytes(Charset.forName("ISO-8859-1"))).toLowerCase();
   }
 
-  static public String convertToUtf(String rus) {
-    return (rus == null) ? "" : new String(rus.getBytes(Charset.forName("UTF-8"))).toLowerCase();
+
+  static public int getDelaySound() {
+    return delaySound.get();
+  }
+
+  static public void setDelaySound(int delay) {
+    delaySound.set(delay);
   }
 
   private static File getDicFile(String dicName) {

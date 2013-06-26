@@ -14,20 +14,39 @@ public class ViewWordForm {
   private JPanel viewPanel;
   private JLabel rusWord;
   private JTextPane englishWord;
+  private boolean isVisEng = true;
+  private boolean isVisRus = true;
+
   public void init() {
     englishWord.setText("");
     rusWord.setText("");
   }
 
   public void setEnglishWord(String w) {
-    englishWord.setText(w);
+    if (isVisEng)
+      englishWord.setText(w);
+    else
+      englishWord.setText("");
   }
 
   public void setRussianWord(String w) {
-    rusWord.setText(w);
+    if (isVisRus)
+      rusWord.setText(w);
+    else
+      rusWord.setText("");
   }
 
   public JPanel getViewPanel() {
     return viewPanel;
+  }
+
+  public void setVisEng(boolean visEng) {
+    isVisEng = visEng;
+    if (!isVisEng) englishWord.setText("");
+  }
+
+  public void setVisRus(boolean visRus) {
+    isVisRus = visRus;
+    if (!isVisRus) rusWord.setText("");
   }
 }

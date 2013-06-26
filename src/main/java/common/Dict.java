@@ -1,6 +1,7 @@
 package common;
 
 import service.*;
+import view.ViewDicForm;
 import view.ViewSettingForm;
 import view.ViewWordForm;
 
@@ -12,16 +13,20 @@ import java.util.*;
 public class Dict {
   static ViewWordForm viewWord;
   static ViewSettingForm viewSetting;
+  static ViewDicForm viewDicForm;
   static JFrame frame;
   static JFrame frameSettings;
+  static JFrame frameDicView;
   static DicService dicService;
   static PlayService playService;
+
 
   static public void main(String ... args) throws Exception {
     dicService = new DicService();
     playService = new PlayService();
     viewWord = new ViewWordForm();
     viewSetting = new ViewSettingForm();
+    viewDicForm = new ViewDicForm();
     JFrame.setDefaultLookAndFeelDecorated(true);
     frame = new JFrame("Dictionary");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,6 +41,13 @@ public class Dict {
         viewSetting.getViewPanel().getPreferredSize().height + 10);
     frameSettings.setVisible(true);
     frameSettings.setAlwaysOnTop(true);
+    frameDicView = new JFrame("Dic View");
+    frameDicView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frameDicView.getContentPane().add(viewDicForm.getViewPanel());
+    frameDicView.setSize(viewDicForm.getViewPanel().getPreferredSize().width + 10,
+        viewDicForm.getViewPanel().getPreferredSize().height + 10);
+    frameDicView.setVisible(true);
+    frameDicView.setAlwaysOnTop(true);
 
     final ActionListener actionListener = new ActionListener<AbstractMap.SimpleEntry>() {
       @Override
@@ -60,6 +72,39 @@ public class Dict {
         }
       }
     };
+
+    final ActionListener<String> refreshActionListener = new ActionListener<String>() {
+      @Override
+      public void execute(String value) {
+        if (value != null && !value.isEmpty())
+          SetupProps.setPlayWordsPath(value);
+        try {
+          viewSetting.setErrSndText("");
+          viewSetting.setErrRusText("");
+          viewSetting.setErrSndText("");
+          viewSetting.stopPlay();
+          playService.stop();
+          SetupProps.refresh();
+          playService.refresh(actionListener);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    };
+
+    viewSetting.addVisibleEngListener(new ActionListener<Boolean>() {
+      @Override
+      public void execute(Boolean value) {
+        viewWord.setVisEng(value);
+      }
+    });
+
+    viewSetting.addVisibleRusListener(new ActionListener<Boolean>() {
+      @Override
+      public void execute(Boolean value) {
+        viewWord.setVisRus(value);
+      }
+    });
 
     viewSetting.addAutoListener(
         new ActionListener<Boolean>() {
@@ -99,9 +144,8 @@ public class Dict {
           @Override
           public void execute(Void value) {
             try {
-              viewSetting.setErrSndText("");
-              SetupProps.refresh();
-              playService.refresh(actionListener);
+              refreshActionListener.execute("");
+              viewDicForm.refresh(refreshActionListener);
             } catch (Exception e) {
               e.printStackTrace();
             }
@@ -122,6 +166,7 @@ public class Dict {
         new ActionListener<Integer>() {
           @Override
           public void execute(Integer value) {
+            SetupProps.setDelaySound(value);
             playService.setDelay(value);
           }
         }
@@ -152,5 +197,7 @@ public class Dict {
           }
         }
     );
+
+    viewDicForm.refresh(refreshActionListener);
   }
 }

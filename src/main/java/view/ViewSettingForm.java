@@ -6,7 +6,12 @@ import service.SetupProps;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
 
 /**
  */
@@ -30,13 +35,30 @@ public class ViewSettingForm {
   private JTextField errTextField;
   private JTextField errRusTextField;
   private JTextField errSndTextField;
-  private JComboBox playComboBox;
 
   private void createUIComponents() {
   }
 
   public JPanel getViewPanel() {
     return panel1;
+  }
+
+  public void addVisibleEngListener(final ActionListener<Boolean> listener) {
+    checkBoxEng.addActionListener(new java.awt.event.ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        listener.execute(checkBoxEng.isSelected());
+      }
+    });
+  }
+
+  public void addVisibleRusListener(final ActionListener<Boolean> listener) {
+    checkBoxRus.addActionListener(new java.awt.event.ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        listener.execute(checkBoxRus.isSelected());
+      }
+    });
   }
 
   public void addDelayListener(final ActionListener<Integer> listener) {
@@ -57,6 +79,11 @@ public class ViewSettingForm {
     });
   }
 
+  public void stopPlay() {
+    playButton.setSelected(true);
+    playButton.setText("start");
+  }
+
   public void addPlayListener(final ActionListener<Boolean> playListener) {
     playButton.addActionListener(new java.awt.event.ActionListener() {
       @Override
@@ -70,15 +97,6 @@ public class ViewSettingForm {
           playButton.setSelected(true);
           playButton.setText("start");
         }
-      }
-    });
-  }
-
-  public void addPlayDirectListener(final ActionListener<Boolean> playOrderListener) {
-    playOrderCheckBox.addActionListener(new java.awt.event.ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        playOrderListener.execute(playOrderCheckBox.isSelected());
       }
     });
   }
@@ -128,28 +146,8 @@ public class ViewSettingForm {
     });
   }
 
-  public String getPlayCategory() {
-    return playComboBox.getSelectedItem().toString();
-  }
-
-  public String getSelEngWord() {
-    return grabWordsTextPane.getText();
-  }
-
-  public void setAutoMode(boolean b) {
-    autoCheckBox.setSelected(b);
-  }
-
-  public void setSelEngWord(String selEngWord) {
-    grabWordsTextPane.setText(selEngWord);
-  }
-
   public String getGrabWords() {
     return grabWordsTextPane.getText();
-  }
-
-  public JTextField getErrTextField() {
-    return errTextField;
   }
 
   public void setErrText(String s) {
@@ -157,27 +155,13 @@ public class ViewSettingForm {
       this.errTextField.setText(s);
   }
 
-  public String getErrRusText() {
-    return errRusTextField.getText();
-  }
-
   public void setErrRusText(String s) {
     if (!this.errRusTextField.getText().contains(s))
       this.errRusTextField.setText(s);
-  }
-
-  public String getErrSndText() {
-    return errSndTextField.getText();
   }
 
   public void setErrSndText(String s) {
     if (!this.errSndTextField.getText().contains(s))
       this.errSndTextField.setText(s);
   }
-
-//  public void refreshPlays() {
-//    playComboBox.removeAllItems();
-//    for (String s : SetupProps.getPlays())
-//      playComboBox.addItem(s);
-//  }
 }

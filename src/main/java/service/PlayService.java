@@ -27,7 +27,7 @@ public class PlayService {
       prepareSetup();
       isPausePlay.set(false);
       stop();
-      playByDics(listener);
+      //playByDics(listener);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
