@@ -6,9 +6,11 @@ import service.SetupProps;
 
 import javax.swing.*;
 import javax.swing.table.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.*;
+import java.util.List;
 
 /**
  */
@@ -46,18 +48,15 @@ public class ViewDicForm {
       @Override
       public void actionPerformed(ActionEvent e) {
         synchronized (panel1) {
-          if (thread != null)
-              thread.stop();
           thread = new Thread(new Runnable() {
             @Override
             public void run() {
-              int[] rows = dicTable.getSelectedRows();
               for (int row = 0; row < dicTable.getRowCount(); row ++) {
                 if (dicTable.getValueAt(row, 0).equals(false))
                   continue;
+                dicTable.setRowSelectionInterval(row, row);
                 String eng = dicTable.getValueAt(row, 1).toString();
                 File f = SetupProps.getSoundProps().get(eng);
-                dicTable.setRowSelectionInterval(row, row);
                 if (f != null && f.exists()) {
                   PlayingBackAudio.playFromFile(f.getAbsolutePath(), 2);
                   try {
@@ -66,8 +65,12 @@ public class ViewDicForm {
                     ex.printStackTrace();
                   }
                 }
-              }}});
+              }
+              playSelButton.setEnabled(true);
+            }
+          });
           thread.start();
+          playSelButton.setEnabled(false);
         }
       }
     });
@@ -78,6 +81,7 @@ public class ViewDicForm {
           if (thread != null)
             thread.stop();
         }
+        playSelButton.setEnabled(true);
       }
     });
     allSelButton.addActionListener(new java.awt.event.ActionListener() {
@@ -112,7 +116,6 @@ public class ViewDicForm {
     };
     dicTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     dicTable.setRowSelectionAllowed(true);
-    //dicTable.setCellSelectionEnabled(false);
     dicTable.setModel(model);
     dicTable.getColumnModel().getColumn(0).setMaxWidth(30);
     dicTable.getColumnModel().getColumn(1).setPreferredWidth(300);
