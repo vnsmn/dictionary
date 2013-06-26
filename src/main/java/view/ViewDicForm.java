@@ -18,6 +18,8 @@ public class ViewDicForm {
   private JTable dicTable;
   private JButton playSelButton;
   private JButton stopPlayButton;
+  private JButton allUnSelButton;
+  private JButton allSelButton;
   private Thread thread;
 
   public JPanel getViewPanel() {
@@ -50,9 +52,12 @@ public class ViewDicForm {
             @Override
             public void run() {
               int[] rows = dicTable.getSelectedRows();
-              for (int row : rows) {
+              for (int row = 0; row < dicTable.getRowCount(); row ++) {
+                if (dicTable.getValueAt(row, 0).equals(false))
+                  continue;
                 String eng = dicTable.getValueAt(row, 1).toString();
                 File f = SetupProps.getSoundProps().get(eng);
+                dicTable.setRowSelectionInterval(row, row);
                 if (f != null && f.exists()) {
                   PlayingBackAudio.playFromFile(f.getAbsolutePath(), 2);
                   try {
@@ -72,6 +77,24 @@ public class ViewDicForm {
         synchronized (panel1) {
           if (thread != null)
             thread.stop();
+        }
+      }
+    });
+    allSelButton.addActionListener(new java.awt.event.ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        for (int row = 0; row < dicTable.getRowCount(); row ++) {
+          if (dicTable.getValueAt(row, 0).equals(false))
+            dicTable.setValueAt(true, row, 0);
+        }
+      }
+    });
+    allUnSelButton.addActionListener(new java.awt.event.ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        for (int row = 0; row < dicTable.getRowCount(); row ++) {
+          if (dicTable.getValueAt(row, 0).equals(true))
+            dicTable.setValueAt(false, row, 0);
         }
       }
     });
